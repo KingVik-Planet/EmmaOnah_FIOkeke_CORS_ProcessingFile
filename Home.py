@@ -7,10 +7,6 @@ with col1:
     st.image("images/UNN.png", caption = "")
     st.markdown("<span style='color: blue; font-weight: bold;'>University of Nigeria Enugu Campus</span> <i>- Enugu State Nigeria</i>",
                 unsafe_allow_html=True)
-    # links = """|| [Research Gate](https://www.researchgate.net/institution/University-of-Nigeria2) ||
-    # # [Department of Geoinformatics and Suveying](https://www.unn.edu.ng/academics/faculties/environmental-studies/geo-informatics-and-surveying/)||
-    # # [University of Nigeria](unn.edu.ng) ||
-    # """
 
     about = """
     <div style="font-size: 20px; border: 1px solid #ccc; border-radius: 5px; padding: 10px; background-color: lightgreen;">
@@ -88,3 +84,4 @@ with col1:
     if __name__ == "__main__":
         main()
 
+#

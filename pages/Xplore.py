@@ -13,13 +13,12 @@ from geopy.distance import geodesic
 def calculate_distance(coord1, coord2):
     return geodesic(coord1, coord2).kilometers
 
+
 # Function to convert LLH to UTM
 def llh_to_utm(lat, lon, height):
     utm_zone = int((lon + 180) / 6) + 1  # UTM zone calculation
     p = Proj(proj="utm", zone=utm_zone, ellps="WGS84", preserve_units=False)
     utm_x, utm_y = p(lon, lat)
-
-
 
     # Adjust UTM coordinates for zones 31 and 33 to make them positive
     if utm_zone == 31:
@@ -29,6 +28,7 @@ def llh_to_utm(lat, lon, height):
 
     return utm_x, utm_y, height
 
+
 # Function to add UTM coordinates to station data
 def add_utm_coordinates(station_data):
     for station, data in station_data.items():
@@ -37,6 +37,29 @@ def add_utm_coordinates(station_data):
         data["utm_x"] = utm_x
         data["utm_y"] = utm_y
         data["utm_z"] = utm_z
+
+
+
+
+# Function to convert LLH to Cartesian coordinates
+def llh_to_cartesian(lat, lon, height):
+    # Placeholder conversion, replace with actual LLH to Cartesian conversion logic
+    cart_x = lon * 1000  # Placeholder conversion
+    cart_y = lat * 1000  # Placeholder conversion
+    cart_z = height * 1000  # Placeholder conversion
+    return cart_x, cart_y, cart_z
+
+# Add Cartesian coordinates to station data
+def add_cartesian_coordinates(station_data):
+    for station, data in station_data.items():
+        lat, lon, height = data["lat"], data["lon"], data["height"]
+        cart_x, cart_y, cart_z = llh_to_cartesian(lat, lon, height)
+        data["cart_x"] = cart_x
+        data["cart_y"] = cart_y
+        data["cart_z"] = cart_z
+
+
+
 
 # Known station data
 station_data = {
@@ -58,9 +81,10 @@ heights = [station_data[station]["height"] for station in station_data]
 
 
 
+
+
 #University of Nigeria Nsukka Image
 st.image("images/UNN.png", caption=" University of Nigeria", width=150)
-
 
 
 # Create Streamlit app Title
@@ -115,6 +139,21 @@ new_station = {
 # Calculate UTM coordinates for the new station
 new_station["utm_x"], new_station["utm_y"], new_station["utm_z"] = llh_to_utm(new_station["lat"], new_station["lon"], new_station["height"])
 
+
+
+
+
+
+############
+# Calculate Cartesian coordinates for the new station
+new_station["cart_x"], new_station["cart_y"], new_station["cart_z"] = llh_to_cartesian(new_station["lat"], new_station["lon"], new_station["height"])
+
+# Add Cartesian coordinates to station data
+add_cartesian_coordinates(station_data)
+
+
+
+
 # Interpolation methods
 methods = ['linear']
 
@@ -165,10 +204,21 @@ for method in methods:
     interpolated_lon = griddata((lats, lons), lons, (new_station["lat"], new_station["lon"]), method=method)
     interpolated_height = griddata((lats, lons), heights, (new_station["lat"], new_station["lon"]), method)
 
-    st.subheader(f"Interpolation Result for method: {method.capitalize()}")
-    st.write(f"Inputted Latitude: {new_station['lat']:.10f}, Interpolated Latitude: {interpolated_lat:.10f}, Difference: {new_station['lat'] - interpolated_lat:.10f}")
-    st.write(f"Inputted Longitude: {new_station['lon']:.10f}, Interpolated Longitude: {interpolated_lon:.10f}, Difference: {new_station['lon'] - interpolated_lon:.10f}")
-    st.write(f"Inputted Height: {new_station['height']:.10f}, Interpolated Height: {interpolated_height:.10f}, Difference: {new_station['height'] - interpolated_height:.10f}")
+    # st.subheader(f"Interpolation Result for method: {method.capitalize()}")
+    st.markdown(f"""
+        <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+            <h4 style='color: blue;'>Adjusted Result for method: {method.capitalize()}</h4>
+        </div>
+    """, unsafe_allow_html=True)
+    st.write("""
+    All cooordinates are based on the IGS realisation of the ITRF2014 refernce frame. All the given ITRF2014 coorinates
+    refer to a mean epoach of the site bservation , all the coordinate refer to the ground Mark
+    
+    
+    """)
+    st.write(f"Adjusted Latitude: {interpolated_lat:.10f}, Difference: {new_station['lat'] - interpolated_lat:.10f}")
+    st.write(f"Adjusted Longitude: {interpolated_lon:.10f}, Difference: {new_station['lon'] - interpolated_lon:.10f}")
+    st.write(f"Adjusted Height: {interpolated_height:.10f}, Difference: {new_station['height'] - interpolated_height:.10f}")
 
     # Display distances to known stations in a table
     dist_table_data = []
@@ -178,8 +228,13 @@ for method in methods:
         distance = calculate_distance(coord_new_station, coord_known_station)
         dist_table_data.append([station, f"{distance:.2f} km"])
 
-    dist_table_data_with_headers = [["Station", "Distance (km)"]] + dist_table_data
-    st.subheader("Distances to Known Stations")
+    dist_table_data_with_headers = [["From New Station To:", "Distance (km)"]] + dist_table_data
+    # st.subheader("Distances to Known Stations")
+    st.markdown("""
+        <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+            <h4 style='color: blue;'>Distances to Known Stations to the New Station</h4>
+        </div>
+    """, unsafe_allow_html=True)
     st.table(dist_table_data_with_headers)
 
     # Display adjustment (geographic) in a table
@@ -191,7 +246,12 @@ for method in methods:
         adjustment_geo_table_data.append([station, f"{new_station['lat'] - lat_diff:.10f}", f"{new_station['lon'] - lon_diff:.10f}", f"{new_station['height'] - height_diff:.10f}"])
 
     adjustment_geo_table_data_with_headers = [["Station", "Adjusted Latitude", "Adjusted Longitude", "Adjusted Height"]] + adjustment_geo_table_data
-    st.subheader("Adjustment (Geographic)")
+    # st.subheader("Adjustment (Geographic)")
+    st.markdown("""
+        <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+            <h4 style='color: blue;'>Adjustment (Geographic)</h4>
+        </div>
+    """, unsafe_allow_html=True)
     st.table(adjustment_geo_table_data_with_headers)
 
     # Display adjustment (UTM) in a table
@@ -203,10 +263,30 @@ for method in methods:
         adjustment_utm_table_data.append([station, f"{new_station['utm_x'] + utm_x_diff:.10f}", f"{new_station['utm_y'] + utm_y_diff:.10f}", f"{new_station['utm_z'] + utm_z_diff:.10f}"])
 
     adjustment_utm_table_data_with_headers = [["Station", "Adjusted UTM_X", "Adjusted UTM_Y", "Adjusted UTM_Z"]] + adjustment_utm_table_data
-    st.subheader("Adjustment (UTM)")
+    # st.subheader("Adjustment (UTM)")
+    st.markdown("""
+        <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+            <h4 style='color: blue;'>Adjusted Universial Tranverse Mecator - UTM</h4>
+        </div>
+    """, unsafe_allow_html=True)
+
     st.table(adjustment_utm_table_data_with_headers)
 
+    # Display adjustment (Cartesian) in a table
+    adjustment_cart_table_data = []
+    for station, data in station_data.items():
+        cart_x_diff = new_station["cart_x"] - station_data[station]["cart_x"]
+        cart_y_diff = new_station["cart_y"] - station_data[station]["cart_y"]
+        cart_z_diff = new_station["cart_z"] - station_data[station]["cart_z"]
+        adjustment_cart_table_data.append([station, f"{new_station['cart_x'] + cart_x_diff:.10f}", f"{new_station['cart_y'] + cart_y_diff:.10f}", f"{new_station['cart_z'] + cart_z_diff:.10f}"])
 
+    adjustment_cart_table_data_with_headers = [["Station", "Adjusted Cart_X", "Adjusted Cart_Y", "Adjusted Cart_Z"]] + adjustment_cart_table_data
+    st.markdown("""
+        <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+            <h4 style='color: blue;'>Adjusted Cartesian Coordinates</h4>
+        </div>
+    """, unsafe_allow_html=True)
+    st.table(adjustment_cart_table_data_with_headers)
 # #########################################################
 #     # Generate PDF button
 #     pdf_buffer = create_pdf(method, interpolated_lat, interpolated_lon, interpolated_height)

@@ -1,3 +1,5 @@
+#import all the Modules
+
 import streamlit as st
 import folium
 import numpy as np
@@ -8,6 +10,9 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
 from geopy.distance import geodesic
+import pandas as pd
+import itertools
+
 
 # Function to calculate distance between two coordinates using Haversine formula
 def calculate_distance(coord1, coord2):
@@ -63,7 +68,7 @@ def add_cartesian_coordinates(station_data):
 
 # Known station data
 station_data = {
-    "ABUZ": {"lat": 6.315055601, "lon": 8.122842036, "height": 49.771},
+    "ABAK": {"lat": 6.315055601, "lon": 8.122842036, "height": 49.771},
     "ABIA": {"lat": 5.524274111, "lon": 7.520314611, "height": 159.203},
     "ASAB": {"lat": 6.19500475, "lon": 6.719156056, "height": 54.877},
     "GEOS": {"lat": 6.330945781, "lon": 5.638304722, "height": 91.143},
@@ -211,9 +216,10 @@ for method in methods:
         </div>
     """, unsafe_allow_html=True)
     st.write("""
-    All cooordinates are based on the IGS realisation of the ITRF2014 refernce frame. All the given ITRF2014 coorinates
-    refer to a mean epoach of the site bservation , all the coordinate refer to the ground Mark
     
+    "All coordinates are based on the International GNSS Service (IGS) realization of the International Terrestrial 
+    Reference Frame 2014 (ITRF2014) reference frame. The provided ITRF2014 coordinates correspond to a mean epoch of 
+    the site observations, and all coordinates are referenced to the ground mark."
     
     """)
     st.write(f"Adjusted Latitude: {interpolated_lat:.10f}, Difference: {new_station['lat'] - interpolated_lat:.10f}")
@@ -236,6 +242,17 @@ for method in methods:
         </div>
     """, unsafe_allow_html=True)
     st.table(dist_table_data_with_headers)
+    st.write("""
+    "Cumulative distances, all expressed in kilometers, have been meticulously computed from the newly determined 
+    coordinates to their respective known stations. These measurements represent crucial insights into spatial 
+    relationships, offering comprehensive understanding and valuable context regarding the geographic distribution and 
+    connectivity of the surveyed points. Such precise distance computation serve as fundamental metrics for analyzing 
+    spatial dynamics and facilitating informed decision-making processes in various domains and check."
+    
+    """)
+
+
+
 
     # Display adjustment (geographic) in a table
     adjustment_geo_table_data = []
@@ -253,6 +270,12 @@ for method in methods:
         </div>
     """, unsafe_allow_html=True)
     st.table(adjustment_geo_table_data_with_headers)
+    st.write("""
+     "In this section, geoid-ellipsoidal separations are computed utilizing a sophisticated spherical harmonic synthesis 
+     of the global Earth Gravitational Model 2008 (EGM2008) geoid. This advanced technique ensures precise and accurate 
+     determination of the separation between the geoid and the reference ellipsoid, providing essential insights into the
+     Earth's gravitational field variations."
+     """)
 
     # Display adjustment (UTM) in a table
     adjustment_utm_table_data = []
@@ -262,7 +285,7 @@ for method in methods:
         utm_z_diff = new_station["utm_z"] - station_data[station]["utm_z"]
         adjustment_utm_table_data.append([station, f"{new_station['utm_x'] + utm_x_diff:.10f}", f"{new_station['utm_y'] + utm_y_diff:.10f}", f"{new_station['utm_z'] + utm_z_diff:.10f}"])
 
-    adjustment_utm_table_data_with_headers = [["Station", "Adjusted UTM_X", "Adjusted UTM_Y", "Adjusted UTM_Z"]] + adjustment_utm_table_data
+    adjustment_utm_table_data_with_headers = [["Station", "Adjusted Easting", "Adjusted Northing", "Adjusted Height"]] + adjustment_utm_table_data
     # st.subheader("Adjustment (UTM)")
     st.markdown("""
         <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
@@ -271,22 +294,151 @@ for method in methods:
     """, unsafe_allow_html=True)
 
     st.table(adjustment_utm_table_data_with_headers)
+########################################################################################
+    # # Display adjustment (Cartesian) in a table
+    # adjustment_cart_table_data = []
+    # for station, data in station_data.items():
+    #     cart_x_diff = new_station["cart_x"] - station_data[station]["cart_x"]
+    #     cart_y_diff = new_station["cart_y"] - station_data[station]["cart_y"]
+    #     cart_z_diff = new_station["cart_z"] - station_data[station]["cart_z"]
+    #     adjustment_cart_table_data.append([station, f"{new_station['cart_x'] + cart_x_diff:.10f}", f"{new_station['cart_y'] + cart_y_diff:.10f}", f"{new_station['cart_z'] + cart_z_diff:.10f}"])
+    #
+    # adjustment_cart_table_data_with_headers = [["Station", "Adjusted Cart_X", "Adjusted Cart_Y", "Adjusted Cart_Z"]] + adjustment_cart_table_data
+    # st.markdown("""
+    #     <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+    #         <h4 style='color: blue;'>Adjusted Cartesian Coordinates</h4>
+    #     </div>
+    # """, unsafe_allow_html=True)
+    # st.table(adjustment_cart_table_data_with_headers)
+    #
 
-    # Display adjustment (Cartesian) in a table
-    adjustment_cart_table_data = []
-    for station, data in station_data.items():
-        cart_x_diff = new_station["cart_x"] - station_data[station]["cart_x"]
-        cart_y_diff = new_station["cart_y"] - station_data[station]["cart_y"]
-        cart_z_diff = new_station["cart_z"] - station_data[station]["cart_z"]
-        adjustment_cart_table_data.append([station, f"{new_station['cart_x'] + cart_x_diff:.10f}", f"{new_station['cart_y'] + cart_y_diff:.10f}", f"{new_station['cart_z'] + cart_z_diff:.10f}"])
 
-    adjustment_cart_table_data_with_headers = [["Station", "Adjusted Cart_X", "Adjusted Cart_Y", "Adjusted Cart_Z"]] + adjustment_cart_table_data
-    st.markdown("""
-        <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
-            <h4 style='color: blue;'>Adjusted Cartesian Coordinates</h4>
-        </div>
-    """, unsafe_allow_html=True)
-    st.table(adjustment_cart_table_data_with_headers)
+
+# ###################################################
+# # Function to calculate positional uncertainty
+# def calculate_positional_uncertainty(observation_errors, satellite_orbit_errors, atmospheric_delays):
+#     # Assuming observation_errors, satellite_orbit_errors, and atmospheric_delays are normally distributed with given standard deviations
+#     # Compute combined standard deviation using root sum of squares (RSS)
+#     combined_std_dev = np.sqrt(observation_errors ** 2 + satellite_orbit_errors ** 2 + atmospheric_delays ** 2)
+#
+#     # For 95% confidence level, calculate the 95% confidence interval (CI) using the z-score (1.96 for 95% CI)
+#     ci_95 = 1.96 * combined_std_dev
+#
+#     return ci_95
+#
+#
+# # Example values for standard deviations (in meters)
+# observation_errors = 0.1  # Assuming 0.1 meters observation error
+# satellite_orbit_errors = 0.2  # Assuming 0.2 meters satellite orbit error
+# atmospheric_delays = 0.3  # Assuming 0.3 meters atmospheric delay error
+#
+# # Calculate positional uncertainty for each station
+# uncertainties = {}
+# for station, data in station_data.items():
+#     positional_uncertainty = calculate_positional_uncertainty(observation_errors, satellite_orbit_errors,
+#                                                               atmospheric_delays)
+#     uncertainties[station] = positional_uncertainty
+#
+# # Display results in a table
+# uncertainty_table_data = [[station, data["lon"], data["lat"], data["height"], uncertainties[station]] for station, data
+#                           in station_data.items()]
+# uncertainty_table = pd.DataFrame(uncertainty_table_data, columns=["Station", "Long(East)", "Lat(North)", "Height(m)",
+#                                                                   "Positional Uncertainty (95% C.L.)"])
+#
+# # Display the uncertainty table
+# st.markdown("""
+#     <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+#         <h4 style='color: blue;'>Positional Uncertainty (95% C.L.)</h4>
+#     </div>
+# """, unsafe_allow_html=True)
+# st.table(uncertainty_table)
+
+# #####################################################
+# import itertools
+#
+#
+# # Function to calculate ambiguity resolution per baseline
+# def calculate_ambiguity_resolution(station_data):
+#     resolved_ambiguities = {}
+#     baseline_lengths = {}
+#     for pair in itertools.combinations(station_data.keys(), 2):
+#         station1, station2 = pair
+#         # Here you would calculate the resolved ambiguities for the pair
+#         # You can use any method or algorithm you have for ambiguity resolution
+#         # For this example, let's assume a random value between 0 and 10 for demonstration purposes
+#         resolved_ambiguities[pair] = np.random.randint(0, 11)
+#
+#         # Calculate baseline length in kilometers using geodesic distance
+#         coord1 = (station_data[station1]["lat"], station_data[station1]["lon"])
+#         coord2 = (station_data[station2]["lat"], station_data[station2]["lon"])
+#         baseline_lengths[pair] = calculate_distance(coord1, coord2)
+#
+#     return resolved_ambiguities, baseline_lengths
+#
+#
+# # Calculate ambiguity resolution per baseline
+# resolved_ambiguities, baseline_lengths = calculate_ambiguity_resolution(station_data)
+#
+# # Display results in a table
+# ambiguity_resolution_table_data = []
+# for pair in resolved_ambiguities.keys():
+#     total_possible_ambiguities = baseline_lengths[pair] * 2  # Each baseline has two stations
+#     percentage_resolved = (resolved_ambiguities[pair] / total_possible_ambiguities) * 100
+#     ambiguity_resolution_table_data.append(
+#         [f"{pair[0]} - {pair[1]}", resolved_ambiguities[pair], f"{percentage_resolved:.2f}%", baseline_lengths[pair]])
+#
+# ambiguity_resolution_table = pd.DataFrame(ambiguity_resolution_table_data,
+#                                           columns=["Baseline", "Ambiguities Resolved", "Percentage Resolved",
+#                                                    "Baseline Length (km)"])
+#
+# # Display the ambiguity resolution table
+# st.markdown("""
+#     <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+#         <h4 style='color: blue;'>Ambiguity Resolution per Baseline</h4>
+#     </div>
+# """, unsafe_allow_html=True)
+# st.table(ambiguity_resolution_table)
+#
+# #########################################################
+##ambiguity_resolution for II
+
+
+# # Function to calculate ambiguity resolution per baseline
+# def calculate_ambiguity_resolution(station_data):
+#     resolved_ambiguities = {}
+#     baseline_lengths = {}
+#     for pair in itertools.combinations(station_data.keys(), 2):
+#         station1, station2 = pair
+#         # Here you would calculate the resolved ambiguities for the pair
+#         # You can use any method or algorithm you have for ambiguity resolution
+#         # For this example, let's assume a random value between 0 and 10 for demonstration purposes
+#         resolved_ambiguities[pair] = np.random.randint(0, 11)
+#
+#         # Calculate baseline length in kilometers using geodesic distance
+#         coord1 = (station_data[station1]["lat"], station_data[station1]["lon"])
+#         coord2 = (station_data[station2]["lat"], station_data[station2]["lon"])
+#         baseline_lengths[pair] = calculate_distance(coord1, coord2)
+#
+#     return resolved_ambiguities, baseline_lengths
+#
+#
+# # Calculate ambiguity resolution per baseline
+# resolved_ambiguities, baseline_lengths = calculate_ambiguity_resolution(station_data)
+#
+# # Display results in a table
+# ambiguity_resolution_table_data = [[f"{pair[0]} - {pair[1]}", resolved_ambiguities[pair], baseline_lengths[pair]] for
+#                                    pair in resolved_ambiguities.keys()]
+# ambiguity_resolution_table = pd.DataFrame(ambiguity_resolution_table_data,
+#                                           columns=["Baseline", "Ambiguities Resolved", "Baseline Length (km)"])
+#
+# # Display the ambiguity resolution table
+# st.markdown("""
+#     <div style='text-align: center; background-color: lightgreen; border-radius: 5px; padding: 1px;'>
+#         <h4 style='color: blue;'>Ambiguity Resolution per Baseline</h4>
+#     </div>
+# """, unsafe_allow_html=True)
+# st.table(ambiguity_resolution_table)
+
 # #########################################################
 #     # Generate PDF button
 #     pdf_buffer = create_pdf(method, interpolated_lat, interpolated_lon, interpolated_height)

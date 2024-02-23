@@ -18,6 +18,15 @@ def llh_to_utm(lat, lon, height):
     utm_zone = int((lon + 180) / 6) + 1  # UTM zone calculation
     p = Proj(proj="utm", zone=utm_zone, ellps="WGS84", preserve_units=False)
     utm_x, utm_y = p(lon, lat)
+
+
+
+    # Adjust UTM coordinates for zones 31 and 33 to make them positive
+    if utm_zone == 31:
+        utm_x -= 500000  # Add 500000 meters
+    elif utm_zone == 33:
+        utm_x += 500000  # Subtract 500000 meters
+
     return utm_x, utm_y, height
 
 # Function to add UTM coordinates to station data
@@ -107,7 +116,7 @@ new_station = {
 new_station["utm_x"], new_station["utm_y"], new_station["utm_z"] = llh_to_utm(new_station["lat"], new_station["lon"], new_station["height"])
 
 # Interpolation methods
-methods = ['nearest', 'linear', 'cubic']
+methods = ['linear']
 
 # Create PDF function
 def create_pdf(method, interpolated_lat, interpolated_lon, interpolated_height):

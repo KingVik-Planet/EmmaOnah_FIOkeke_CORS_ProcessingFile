@@ -160,7 +160,7 @@ add_cartesian_coordinates(station_data)
 
 
 # Interpolation methods
-methods = ['linear']
+methods = ['linear', 'nearest','scatter plot']
 
 # Create PDF function
 def create_pdf(method, interpolated_lat, interpolated_lon, interpolated_height):
@@ -222,9 +222,9 @@ for method in methods:
     the site observations, and all coordinates are referenced to the ground mark."
     
     """)
-    st.write(f"Adjusted Latitude: {interpolated_lat:.10f}, Difference: {new_station['lat'] - interpolated_lat:.10f}")
-    st.write(f"Adjusted Longitude: {interpolated_lon:.10f}, Difference: {new_station['lon'] - interpolated_lon:.10f}")
-    st.write(f"Adjusted Height: {interpolated_height:.10f}, Difference: {new_station['height'] - interpolated_height:.10f}")
+    st.write(f"Processed Latitude: {interpolated_lat:.10f},Adjusted Latitude: {interpolated_lat:.10f}, Difference: {new_station['lat'] - interpolated_lat:.10f}")
+    st.write(f"Processed Longitude: {interpolated_lon:.10f},Adjusted Longitude: {interpolated_lon:.10f}, Difference: {new_station['lon'] - interpolated_lon:.10f}")
+    st.write(f"Processed Height: {interpolated_height:.10f},Adjusted Height: {interpolated_height:.10f}, Difference: {new_station['height'] - interpolated_height:.10f}")
 
     # Display distances to known stations in a table
     dist_table_data = []
